@@ -1,17 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "enabled": true,
   "outline": {
     "enabled": true,
     "title": "【この記事でわかること】"
   },
-  "section_navigation": {
-    "enabled": true,
-    "minimum_h3": 3,
-    "default_title": "この章でわかること",
-    "overrides": []
-  },
-  "list_boxes": [],
   "markers": [
     {
       "section": {
@@ -300,6 +293,24 @@
       },
       "tone": "positive",
       "text": "最終判断は公式情報や販売店、保険会社で確認してください"
+    }
+  ],
+  "paragraph_splits": [],
+  "h3_anchor_lists": [
+    {
+      "headingId": "h2-section-01"
+    },
+    {
+      "headingId": "h2-section-04"
+    },
+    {
+      "headingId": "h2-section-05"
+    },
+    {
+      "headingId": "h2-section-06"
+    },
+    {
+      "headingId": "h2-section-07"
     }
   ]
 }

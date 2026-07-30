@@ -27,7 +27,7 @@ Codexは3項目を受け取ったら、同じタスク内で以下を順番に�
 8. 見出し構成を作成
 9. 本文を作成
 10. 外部リンクを追加
-11. SWELL向け装飾を作成
+11. テーマ非依存の標準HTML装飾を作成
 12. `metadata.json` を作成
 13. `npm test` を実行
 14. `npm run check -- --slug {slug}` を実行し、PASS後に装飾チェック、WordPress接続確認、draft作成/既存draft更新、投稿後検証まで自動完了させる

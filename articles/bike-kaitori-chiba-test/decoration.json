@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "enabled": true,
+  "outline": {
+    "enabled": true,
+    "title": "【この記事でわかること】"
+  },
+  "markers": [],
+  "paragraph_splits": [],
+  "h3_anchor_lists": []
+}
