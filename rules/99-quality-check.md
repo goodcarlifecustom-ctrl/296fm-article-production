@@ -12,7 +12,7 @@
 - `status` は `draft`。
 - `article.html`、`article-linked.html`、`article-decorated.html` が空ではなく、Gutenbergブロックコメントの開始・終了が対応し、H1を含まない。
 - 既存ブロックの二重変換、記事全体の `wp:html` 化、Markdown見出し・リスト・画像記法・コードフェンス残存、front matter混入、タイトル重複、rendered HTML投稿を検出する。
-- Codex生成の目次、目次ショートコード、目次用nav、H2/H3アンカーリンク一覧、「この章でわかること」、H2直下のH3一覧がなく、duplicate id と missing target がない。
+- Codex生成の目次、目次ショートコード、目次用nav、手動のH2/H3アンカーリンク一覧、「この章でわかること」、H2直下のH3一覧がなく、duplicate id と missing target がない。
 
 - 記事冒頭が「結論：」「要点：」「ポイント：」などのラベルで始まっていない。
 - H3直下が1段落だけで終わっていない。
@@ -24,9 +24,9 @@
 - 外部URLのベタ書き、空aタグ、存在しない内部アンカー、秘密情報、コミット対象の `.env` がない。
 - `post_to_wp:false` ならWordPress環境変数を要求しない。`true` なら投稿前条件を確認する。
 
-## アンカー生成（復元済み）
+## 標準HTML装飾の検証
 
-- 装飾工程では、記事冒頭にシステム生成のSWELL capbox「【この記事でわかること】」を配置し、全H2へのアンカーリンクをH2順・H2文言一致で出力する。
-- H3が3件以上あるH2配下では、H2導入文の直後にシステム生成のSWELL capbox「この章でわかること」を配置し、配下の全H3へのアンカーリンクをH3順・H3文言一致で出力する。
-- H2/H3はHTMLのidとGutenberg `wp:heading` コメントの`anchor`を必ず一致させ、`class="wp-block-heading"`を付与する。既存の有効なIDは維持し、IDがない場合だけ安定IDを生成する。
-- 手動目次、`nav`、`[swell_toc]`、`[toc]`は引き続き禁止し、例外はシステム生成capboxのみとする。
+- 装飾工程では最初のH2直前に `<p>【この記事でわかること】</p>` と通常の `<ul>` を1回だけ配置し、全H2へのアンカーリンクをH2順・文言一致で出力する。
+- H2/H3/H4の既存IDを維持し、ない場合だけ安定IDを生成する。
+- `article-decorated.html` にGutenbergブロックコメント、SWELL固有クラス・ショートコード、テーマ・プラグイン固有装飾を含めない。
+- 「この章でわかること」などのH3一覧は追加しない。

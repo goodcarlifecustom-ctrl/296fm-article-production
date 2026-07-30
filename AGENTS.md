@@ -25,7 +25,7 @@
 ## 出力ルール
 
 - Markdown本文は `articles/{slug}/draft.md` に保存する。
-- WordPress向け本文HTMLは `article.html`、リンク追加後は `article-linked.html`、SWELL装飾後は `article-decorated.html` に保存する。
+- WordPress向け本文HTMLは `article.html`、リンク追加後は `article-linked.html`、標準HTML装飾後は `article-decorated.html` に保存する。
 - `metadata.json` と `research.md` は全記事で必須。
 - WordPress投稿結果は `articles/{slug}/wp-result.md` に保存する。
 
@@ -36,9 +36,10 @@
 - 架空の口コミ、体験談、料金、順位、投稿者の作成。
 - 公開状態でのWordPress投稿、既存投稿の更新・削除、別スラッグへの代替投稿。
 
-## 新規記事のSWELL・Gutenberg装飾
+## 新規記事の標準HTML装飾
 
 - 新規記事では `decoration.json` を作成し、原則 `enabled: true` とする。
 - 装飾生成は `npm run decorate -- --slug <slug>`、装飾検証は `npm run check:decoration -- --slug <slug>` を使う。
 - 装飾は `article-linked.html`（なければ `article.html`）から `article-decorated.html` を冪等生成し、装飾済みHTMLを入力として再装飾しない。
+- 装飾結果にSWELL・Gutenberg固有のコメント、クラス、ショートコードを出力しない。最初のH2直前には標準のp/ul/li/aによる「【この記事でわかること】」を1回だけ置く。
 - この装飾手順はWordPress下書き投稿処理を変更しない。

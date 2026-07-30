@@ -8,7 +8,7 @@ import { argvValue, isUnresolved, parseList, parseScalar } from './workflow-util
 import { redact } from './wordpress-utils.mjs';
 import { validateGutenbergContent, visibleCharCount } from './gutenberg-utils.mjs';
 import { loadApprovedOutline, validateNoManualToc } from './toc-validation.mjs';
-import { compareNormalLinks, validateNormalLinks, normalLinkSignatures, validateExternalLinksAgainstSources } from './decoration-utils.mjs';
+import { compareNormalLinks, validateNormalLinks, normalLinkSignatures, validateExternalLinksAgainstSources, validateDecoratedHtml } from './decoration-utils.mjs';
 const execFileAsync = promisify(execFile);
 
 function visibleTextLength(html) { return html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<!--([\s\S]*?)-->/g, '').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, '').length; }
@@ -103,8 +103,7 @@ if (metadata.slug && metadata.slug !== slug) await fail('slug がパスとmetada
 if (metadata.target_keyword && mainKeyword && metadata.target_keyword !== mainKeyword) await fail('メインキーワードがファイル間で一致しません'); else pass('メインキーワードは一致しています');
 for (const f of ['article.html','article-linked.html','article-decorated.html']) {
   if (!existsSync(path.join(dir, f))) continue; const html = await readFile(path.join(dir, f), 'utf8');
-  if (!html.trim()) continue; const gb = validateGutenbergContent(html, { title: metadata.title }); if (!gb.ok) await fail(`${f} のGutenberg検証に失敗しました: ${gb.errors.join(' / ')}`); else pass(`${f} はGutenbergブロックとして有効です`); if (/<h1\b/i.test(html)) await fail(`${f} にH1があります`); else pass(`${f} にH1はありません`);
-  const tocErrors = validateNoManualToc(html, { approvedOutline, metadata }); if (tocErrors.length) await fail(`${f} の目次・見出し構造検証に失敗しました: ${tocErrors.join(' / ')}`); else pass(`${f} の目次・見出し構造検証を確認しました`);
+  if (!html.trim()) continue; if (f === 'article-decorated.html') { const errors = validateDecoratedHtml(html); if (errors.length) await fail(`${f} の標準HTML検証に失敗しました: ${errors.join(' / ')}`); else pass(`${f} はテーマ非依存の標準HTMLとして有効です`); } else { const gb = validateGutenbergContent(html, { title: metadata.title }); if (!gb.ok) await fail(`${f} のGutenberg検証に失敗しました: ${gb.errors.join(' / ')}`); else pass(`${f} はGutenbergブロックとして有効です`); const tocErrors = validateNoManualToc(html, { approvedOutline, metadata }); if (tocErrors.length) await fail(`${f} の目次・見出し構造検証に失敗しました: ${tocErrors.join(' / ')}`); else pass(`${f} の目次・見出し構造検証を確認しました`); } if (/<h1\b/i.test(html)) await fail(`${f} にH1があります`); else pass(`${f} にH1はありません`);
   const hs = headings(html);
   const h3Count = hs.filter((h) => h.level === 3).length;
   if (hs.length >= 8 && h3Count === 0) await fail(`${f} は見出しが8件以上あるのにH3が0件です`, '主要章をH2、章内項目をH3に戻してください');
