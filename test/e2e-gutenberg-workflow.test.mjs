@@ -76,10 +76,15 @@ test('E2E normalizes job, decorates, checks, and posts mocked draft payload safe
     const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
     Object.assign(meta, { title: '安全なGutenberg記事', meta_description: '説明文', search_intent: '確認', persona: '編集担当者', article_type: '比較', min_char_count: 50, target_char_count: 120, max_char_count: 2000 });
     writeFileSync(metaPath, JSON.stringify(meta, null, 2) + '\n');
+    const decorationPath = path.join(dir, 'decoration.json');
+    const decoration = JSON.parse(readFileSync(decorationPath, 'utf8'));
+    decoration.markers = [
+      { section: { level: 2, id: 'sec-01' }, paragraph_index: 0, tone: 'positive', text: '投稿前には本文、リンク、表、アンカーが保たれているかを確認しましょう。' },
+      { section: { level: 2, id: 'sec-02' }, paragraph_index: 0, tone: 'positive', text: '最後に、WordPressへ送るpayloadがdraft固定であることを確認します。' },
+    ];
+    writeFileSync(decorationPath, JSON.stringify(decoration, null, 2) + '\n');
     npm(['run', 'decorate', '--', '--slug', slug]);
     const decorated = readFileSync(path.join(dir, 'article-decorated.html'), 'utf8');
-    writeFileSync(path.join(dir, 'article.html'), decorated);
-    writeFileSync(path.join(dir, 'article-linked.html'), decorated);
     npm(['run', 'check', '--', '--slug', slug], { ARTICLE_CHECK_SKIP_WP_AUTOSYNC: '1' });
     await node(['scripts/post-wordpress-draft.mjs', '--slug', slug, '--confirm'], { WP_SITE_URL: srv.url, WP_REST_ROOT: '', WP_USERNAME: 'u', WP_APPLICATION_PASSWORD: 'p', WP_APP_PASSWORD: '', WP_DRAFT_SKIP_PRECHECKS: '1' });
     assert.equal(captured.status, 'draft');
@@ -88,7 +93,7 @@ test('E2E normalizes job, decorates, checks, and posts mocked draft payload safe
     const rawBlocks = parse(decorated).map((b) => b.blockName);
     assert.deepEqual(sentBlocks, rawBlocks);
     assert.doesNotMatch(captured.content, /<!--\s*\/?wp:heading/);
-    assert.match(captured.content, /<!-- wp:/);
+    assert.doesNotMatch(captured.content, /<!--\s*\/?wp:|swell-block-|swl-|cap_box|is-style-|wp-block-/i);
     assert.doesNotMatch(captured.content, /^---/m);
     assert.doesNotMatch(captured.content, /metadata|作業ログ|rendered/i);
     assert.doesNotMatch(captured.content, /<h1\b/i);

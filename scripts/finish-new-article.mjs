@@ -29,9 +29,12 @@ async function main() {
   const slug = argvValue(process.argv, 'slug');
   if (!slug) fail('Usage: npm run finish -- --slug <slug>');
   try {
+    // decoration.json must already contain Codex-selected markers. This command
+    // intentionally validates/executes the completed configuration and never
+    // attempts to infer important passages from article text.
     await run('decorate', ['run', 'decorate', '--', '--slug', slug]);
-    await run('quality check', ['run', 'check', '--', '--slug', slug], { env: { ...process.env, ARTICLE_CHECK_SKIP_WP_AUTOSYNC: '1' } });
     await run('decoration check', ['run', 'check:decoration', '--', '--slug', slug]);
+    await run('quality check', ['run', 'check', '--', '--slug', slug], { env: { ...process.env, ARTICLE_CHECK_SKIP_WP_AUTOSYNC: '1' } });
 
     const metadata = JSON.parse(await readFile(path.join('articles', slug, 'metadata.json'), 'utf8'));
     if (metadata.status !== 'draft') fail('metadata.status must be draft');

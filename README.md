@@ -1,6 +1,6 @@
 # バイク買取MAX 新規記事作成ワークフロー
 
-新規SEO記事をGutenbergブロックマークアップで作成し、原則としてWordPress下書き投稿まで進めるためのワークフローです。完成本文はMarkdownではなく、WordPressコードエディターへ貼り付けるとブロックとして認識される形式で出力します。
+新規SEO記事をHTMLで作成し、必要な場合だけWordPress下書き投稿まで進めるためのワークフローです。装飾結果はテーマやプラグインに依存しない標準HTMLです。
 
 対象メディア: https://poi-poi.co.jp/bike/
 
@@ -79,6 +79,12 @@ npm run check -- --slug ctn-bike-kaitori-reviews
 
 `npm run check` は品質チェックがPASSした後、`post_to_wp: true` の記事だけ `npm run check:decoration`、`npm run wp:doctor`、`npm run wp:draft` を自動実行します。再実行や手動完了には同じ順序を実行する `npm run finish -- --slug <slug>` も使えます。`post_to_wp:false` の記事ではWordPress環境変数を要求せず、ネットワーク接続もしません。
 
+## 通常の記事生成入口
+
+Codexによる通常生成の入口は`AGENTS.md`と`prompt.md`です。Codexはそこから`rules/00`〜`rules/05`、`rules/99`を順番に読みます。`npm run create`はディレクトリと雛形を作るだけで、本文や意味に基づくマーカーを自動生成しません。
+
+通常作業は、`article.html`作成、`article-linked.html`作成、H2・H3 ID確認、直接本文の読解、`markers`作成、必要な`paragraph_splits`・`h3_anchor_lists`作成、`npm run decorate`、`npm run check:decoration`、`npm run check`の順です。`npm run finish`はこれらの意味選定を代行せず、完成済み設定を使ってdecorate以降を再実行する完了処理です。
+
 ## 出力ファイルの役割
 
 - `input.yml`: 正規化済み入力。`status: draft`、`wordpress_draft`、`post_to_wp`、対象メディア、文字数設定を含む。
@@ -91,22 +97,24 @@ npm run check -- --slug ctn-bike-kaitori-reviews
 - `draft.md`: 作業用Markdown。WordPress送信用本文ではありません。
 - `article.html`: Gutenbergブロックマークアップ本文。H1は禁止。
 - `article-linked.html`: 外部リンク追加後のGutenbergブロックマークアップ本文。
-- `article-decorated.html`: SWELL装飾後のGutenbergブロックマークアップ本文。front matter除去後にWordPress投稿対象。
+- `article-decorated.html`: テーマ非依存の標準HTMLで装飾した本文。front matter除去後にWordPress投稿対象。
 - `external-links.md`: 外部リンク候補、採用理由、確認日。
 - `check-report.md`: 品質チェック結果。
 - `wp-result.md`: WordPress下書き投稿成功時の結果。
 
 ## WordPress投稿の安全条件
 
-WordPress投稿は必ず `draft` です。`wordpress_draft:false` / `post_to_wp:false` のサンプルジョブでは投稿処理を行いません。送信する `content` は `article-decorated.html` からfront matterを除去したGutenbergブロックマークアップで、作業ログ、metadata、Markdown原稿、rendered HTMLは含めません。環境変数は `WP_SITE_URL` または `WP_REST_ROOT`、`WP_USERNAME`、`WP_APPLICATION_PASSWORD` または後方互換の `WP_APP_PASSWORD` をプロセス環境変数から読み、`.env` は必須にしません。投稿前にRESTルートGET、認証確認、作成権限確認、同一スラッグ重複確認、品質チェックを行います。既存投稿の更新・削除、別スラッグ投稿、公開投稿は行いません。
+WordPress投稿は必ず `draft` です。`wordpress_draft:false` / `post_to_wp:false` のサンプルジョブでは投稿処理を行いません。送信する `content` は `article-decorated.html` からfront matterを除去した標準HTMLで、作業ログ、metadata、Markdown原稿、rendered HTMLは含めません。環境変数は `WP_SITE_URL` または `WP_REST_ROOT`、`WP_USERNAME`、`WP_APPLICATION_PASSWORD` または後方互換の `WP_APP_PASSWORD` をプロセス環境変数から読み、`.env` は必須にしません。投稿前にRESTルートGET、認証確認、作成権限確認、同一スラッグ重複確認、品質チェックを行います。既存投稿の更新・削除、別スラッグ投稿、公開投稿は行いません。
 
-## SWELL・Gutenberg装飾フロー
+## 標準HTML装飾フロー
 
-新規記事では `decoration.json` を生成し、`article-linked.html`（なければ `article.html`）から `article-decorated.html` を冪等に生成します。WordPress投稿処理は装飾済みGutenbergブロックマークアップを送信します。
+新規記事では `decoration.json` を生成し、`article-linked.html`（なければ `article.html`）から `article-decorated.html` を冪等に生成します。装飾結果にはSWELL・Gutenberg固有コードを含めず、`post_to_wp: false`（files_only）の場合はWordPressへ接続しません。
 
 ```bash
 npm run decorate -- --slug <slug>
 npm run check:decoration -- --slug <slug>
 ```
 
-装飾処理では、H2/H3の安定ID、設定された通常ulのcapbox、positive/negativeマーカー、`decoration-manifest.json` を生成・検証します。
+装飾処理では、H2/H3/H4の安定ID、最初のH2直前のH2リンク一覧、`h3_anchor_lists`で明示した章だけのH3リンク一覧、`decoration.json`で明示したpositive/negativeマーカーと意味境界での段落分割、`decoration-manifest.json` を生成・検証します。見出し数を条件に章内リンクを自動生成したり、先頭文を機械的に強調したり、文字数だけで段落を分割したりしません。
+
+本文を持つH2・H3には見出し単位で`markers`設定が必要です。新規作成直後の空配列は設定前の状態を表し、本文完成後も`markers: []`のままでは`decorate`と`check:decoration`をPASSできません。

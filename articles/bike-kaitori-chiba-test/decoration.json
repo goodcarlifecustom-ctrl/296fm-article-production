@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "enabled": true,
+  "outline": {
+    "enabled": true,
+    "title": "【この記事でわかること】"
+  },
+  "markers": [
+    {
+      "section": {
+        "level": 2,
+        "id": "h2-01",
+        "heading": "千葉県内で出張買取を使うメリット"
+      },
+      "paragraph_index": 0,
+      "tone": "positive",
+      "text": "出張買取なら、自宅や保管場所で査定を受けられるため、車検切れやバッテリー上がりのバイクでも相談しやすい点がメリットです。"
+    },
+    {
+      "section": {
+        "level": 2,
+        "id": "h2-02",
+        "heading": "原付・不動車・事故車・廃車は売れるのか"
+      },
+      "paragraph_index": 0,
+      "tone": "positive",
+      "text": "不動車や事故車も、修理前提、部品取り、海外需要などの可能性があるため、処分前に相談する価値があります。"
+    },
+    {
+      "section": {
+        "level": 2,
+        "id": "h2-03",
+        "heading": "査定前準備と必要書類"
+      },
+      "paragraph_index": 0,
+      "tone": "negative",
+      "text": "無理な修理をする前に、修理費と査定への影響を業者へ確認しましょう。"
+    },
+    {
+      "section": {
+        "level": 2,
+        "id": "h2-04",
+        "heading": "手続き確認でトラブルを避けるポイント"
+      },
+      "paragraph_index": 0,
+      "tone": "negative",
+      "text": "売却時は、名義変更、廃車、税止め、ナンバー返納、引き取り費用、キャンセル条件を書面やメールで確認します。"
+    },
+    {
+      "section": {
+        "level": 2,
+        "id": "h2-05",
+        "heading": "バイク買取MAXへの相談導線"
+      },
+      "paragraph_index": 0,
+      "tone": "positive",
+      "text": "バイク買取MAXでは、千葉県内でバイクを売りたい方に向けて、出張買取、不動車、原付、事故車、廃車予定車両の相談ができます。"
+    }
+  ],
+  "paragraph_splits": [],
+  "h3_anchor_lists": []
+}

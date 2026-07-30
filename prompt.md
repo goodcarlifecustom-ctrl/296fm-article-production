@@ -25,17 +25,21 @@ Codexは3項目を受け取ったら、同じタスク内で以下を順番に�
 6. `npm run extract` を実行
 7. `research.md` を作成
 8. 見出し構成を作成
-9. 本文を作成
-10. 外部リンクを追加
-11. SWELL向け装飾を作成
-12. `metadata.json` を作成
-13. `npm test` を実行
-14. `npm run check -- --slug {slug}` を実行し、PASS後に装飾チェック、WordPress接続確認、draft作成/既存draft更新、投稿後検証まで自動完了させる
-15. 必要に応じて `npm run finish -- --slug {slug}` で同じ完了処理を再実行する
-16. `metadata.json` と `wp-result.md` の更新を確認
-17. 最終報告
+9. H2・H3へ一意のIDを付けた`article.html`を作成
+10. IDと本文を維持して外部リンクを追加し、`article-linked.html`を作成
+11. Codex自身が各H2・H3から次の見出しまでの直接本文を読み、各対象見出しの最重要箇所を意味に基づいて選ぶ
+12. 選択した箇所を`decoration.json`の`markers`へ記入し、必要に応じて`paragraph_splits`と`h3_anchor_lists`も記入
+13. `npm run decorate -- --slug {slug}`を実行
+14. `npm run check:decoration -- --slug {slug}`を実行し、カバレッジ不足なら指摘された見出しの`markers`を補完して13から再実行
+15. `metadata.json`を完成させ、`npm test`を実行
+16. `npm run check -- --slug {slug}`を実行し、すべてPASSした場合だけ完了処理へ進む
+17. 必要に応じて`npm run finish -- --slug {slug}`を使う。ただし`finish`は意味選定や`markers`補完を行わないため、12までの完了後に限る
+18. `post_to_wp: true`の場合だけWordPress下書き処理と`wp-result.md`を確認
+19. 全検証PASS後に最終報告
 
 各工程を別タスクへ分けない。記事作成とWordPress投稿は同じCodexタスク内で完了させる。
+
+`npm run create`が生成する`markers: []`は雛形であり、装飾完了を意味しない。Node.jsへ意味選定を委ねたり、先頭文を一律に選んだりせず、Codexが記事本文の主張・推奨・注意・リスクを読んでpositive/negativeを判断する。
 
 ## 入力仕様
 
