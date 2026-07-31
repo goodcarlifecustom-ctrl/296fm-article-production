@@ -2,14 +2,14 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { argvValue } from './workflow-utils.mjs';
-import { applyConfiguredMarkers, applyConfiguredParagraphSplits, assignHeadingIds, atomicWrite, compareNormalLinks, els, insertOutline, insertSectionNavigation, loadDecorationConfig, parseFragment, removePlatformMarkup, serialize, sha256, sourceFile, validateDecoratedHtml, validateNormalLinks } from './decoration-utils.mjs';
+import { applyConfiguredMarkers, applyConfiguredParagraphSplits, assignHeadingIds, atomicWrite, compareNormalLinks, els, insertOutline, insertSectionNavigation, loadDecorationConfig, parseFragment, removePlatformMarkup, serialize, sha256, sourceFile, validateDecoratedHtml, validateMarkerCoverage, validateNormalLinks } from './decoration-utils.mjs';
 
 const DEFAULT_DECORATION = { version: 2, enabled: true, outline: { enabled: true, title: '【この記事でわかること】' }, h3_anchor_lists: [], markers: [], paragraph_splits: [] };
 async function configFor(dir) { return existsSync(path.join(dir, 'decoration.json')) ? loadDecorationConfig(dir) : structuredClone(DEFAULT_DECORATION); }
 
 export async function decorate(slug) {
   const dir = path.join('articles', slug); const config = await configFor(dir); const source = await sourceFile(dir); const sourceHtml = await readFile(source, 'utf8'); const root = parseFragment(sourceHtml);
-  removePlatformMarkup(root); assignHeadingIds(root); applyConfiguredParagraphSplits(root, config.paragraph_splits || []); applyConfiguredMarkers(root, config.markers || []);
+  removePlatformMarkup(root); assignHeadingIds(root); applyConfiguredParagraphSplits(root, config.paragraph_splits || []); const coverageErrors = validateMarkerCoverage(root, config.markers || []); if (coverageErrors.length) throw new Error(coverageErrors.join('\n')); applyConfiguredMarkers(root, config.markers || []);
   if (!els(root, 'h2').length) throw new Error('H2がありません');
   if (config.outline?.enabled === false) throw new Error('outline.enabled は false にできません');
   insertOutline(root, config.outline?.title || '【この記事でわかること】');
