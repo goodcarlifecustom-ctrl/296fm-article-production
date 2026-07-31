@@ -2,7 +2,7 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { argvValue } from './workflow-utils.mjs';
-import { compareNormalLinks, loadDecorationConfig, parseFragment, sha256, sourceFile, stripGeneratedText, validateConfiguredMarkers, validateConfiguredSectionNavigation, validateDecoratedHtml, validateNormalLinks } from './decoration-utils.mjs';
+import { assignHeadingIds, compareNormalLinks, loadDecorationConfig, parseFragment, removePlatformMarkup, sha256, sourceFile, stripGeneratedText, validateConfiguredMarkers, validateConfiguredSectionNavigation, validateDecoratedHtml, validateMarkerCoverage, validateNormalLinks } from './decoration-utils.mjs';
 
 export async function checkDecoration(slug) {
   const dir = path.join('articles', slug); const details = []; let ok = true; const fail = (message) => { ok = false; details.push(`NG: ${message}`); }; const pass = (message) => details.push(`OK: ${message}`);
@@ -15,7 +15,7 @@ export async function checkDecoration(slug) {
   for (const error of validateConfiguredSectionNavigation(parseFragment(html), config.h3_anchor_lists || [])) fail(error);
   if (ok) pass('標準HTML、H2アンカー一覧、IDを確認');
   try {
-    const source = await sourceFile(dir); const sourceHtml = await readFile(source, 'utf8');
+    const source = await sourceFile(dir); const sourceHtml = await readFile(source, 'utf8'); const sourceRoot = parseFragment(sourceHtml); removePlatformMarkup(sourceRoot); assignHeadingIds(sourceRoot); for (const error of validateMarkerCoverage(sourceRoot, config.markers || [])) fail(error);
     if (stripGeneratedText(parseFragment(sourceHtml)) !== stripGeneratedText(parseFragment(html))) fail('装飾前後の本文テキスト不一致'); else pass('本文テキスト整合');
     const linkErrors = [...validateNormalLinks(sourceHtml), ...validateNormalLinks(html), ...compareNormalLinks(sourceHtml, html)]; if (linkErrors.length) linkErrors.forEach(fail); else pass('装飾前後の通常リンク保持を確認');
     const manifest = JSON.parse(await readFile(path.join(dir, 'decoration-manifest.json'), 'utf8')); if (manifest.format !== 'standard-html' || manifest.decorated_sha256 !== sha256(html)) fail('装飾マニフェストが出力と一致しません'); else pass('装飾マニフェストを確認');

@@ -10,9 +10,9 @@
 - `min_word_count`、`target_word_count`、`max_word_count`（互換名。日本語の可視本文文字数として扱い、metadataでは `min_char_count`、`target_char_count`、`max_char_count` も保存） が正の数値で、`min_word_count <= target_word_count <= max_word_count` を満たす。
 - `metadata.json` の `title`、`slug`、`meta_description`、`search_intent`、`persona`、`article_type`、`target_word_count` が null/空/auto ではない。
 - `status` は `draft`。
-- `article.html`、`article-linked.html`、`article-decorated.html` が空ではなく、Gutenbergブロックコメントの開始・終了が対応し、H1を含まない。
+- `article.html`と`article-linked.html`はGutenbergブロックコメントの開始・終了が対応し、`article-decorated.html`はテーマ非依存の標準HTMLであり、いずれもH1を含まない。
 - 既存ブロックの二重変換、記事全体の `wp:html` 化、Markdown見出し・リスト・画像記法・コードフェンス残存、front matter混入、タイトル重複、rendered HTML投稿を検出する。
-- Codex生成の目次、目次ショートコード、目次用nav、手動のH2/H3アンカーリンク一覧、「この章でわかること」、H2直下のH3一覧がなく、duplicate id と missing target がない。
+- 装飾前HTMLに目次ショートコード、目次用nav、手動のH2/H3アンカーリンク一覧がなく、装飾後HTMLのH2一覧と設定駆動H3一覧を除いて見出しリンク一覧がなく、duplicate idとmissing targetがない。
 
 - 記事冒頭が「結論：」「要点：」「ポイント：」などのラベルで始まっていない。
 - H3直下が1段落だけで終わっていない。
@@ -29,4 +29,6 @@
 - 装飾工程では最初のH2直前に `<p>【この記事でわかること】</p>` と通常の `<ul>` を1回だけ配置し、全H2へのアンカーリンクをH2順・文言一致で出力する。
 - H2/H3/H4の既存IDを維持し、ない場合だけ安定IDを生成する。
 - `article-decorated.html` にGutenbergブロックコメント、SWELL固有クラス・ショートコード、テーマ・プラグイン固有装飾を含めない。
-- 「この章でわかること」などのH3一覧は追加しない。
+- `article-linked.html`の通常本文を持つすべてのH2・H3に、意味に基づいて選ばれた`markers`設定が1件以上ある。`markers: []`や未設定見出しを完成扱いにしない。
+- H3章内リンクは`h3_anchor_lists`に明示したH2だけへ生成し、設定していない章へ自動追加しない。
+- `npm run decorate`と`npm run check:decoration`がPASSした後に`npm run check`を完了し、カバレッジ不足なら`markers`補完後に全検証を再実行する。

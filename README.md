@@ -79,6 +79,12 @@ npm run check -- --slug ctn-bike-kaitori-reviews
 
 `npm run check` は品質チェックがPASSした後、`post_to_wp: true` の記事だけ `npm run check:decoration`、`npm run wp:doctor`、`npm run wp:draft` を自動実行します。再実行や手動完了には同じ順序を実行する `npm run finish -- --slug <slug>` も使えます。`post_to_wp:false` の記事ではWordPress環境変数を要求せず、ネットワーク接続もしません。
 
+## 通常の記事生成入口
+
+Codexによる通常生成の入口は`AGENTS.md`と`prompt.md`です。Codexはそこから`rules/00`〜`rules/05`、`rules/99`を順番に読みます。`npm run create`はディレクトリと雛形を作るだけで、本文や意味に基づくマーカーを自動生成しません。
+
+通常作業は、`article.html`作成、`article-linked.html`作成、H2・H3 ID確認、直接本文の読解、`markers`作成、必要な`paragraph_splits`・`h3_anchor_lists`作成、`npm run decorate`、`npm run check:decoration`、`npm run check`の順です。`npm run finish`はこれらの意味選定を代行せず、完成済み設定を使ってdecorate以降を再実行する完了処理です。
+
 ## 出力ファイルの役割
 
 - `input.yml`: 正規化済み入力。`status: draft`、`wordpress_draft`、`post_to_wp`、対象メディア、文字数設定を含む。
@@ -110,3 +116,5 @@ npm run check:decoration -- --slug <slug>
 ```
 
 装飾処理では、H2/H3/H4の安定ID、最初のH2直前のH2リンク一覧、`h3_anchor_lists`で明示した章だけのH3リンク一覧、`decoration.json`で明示したpositive/negativeマーカーと意味境界での段落分割、`decoration-manifest.json` を生成・検証します。見出し数を条件に章内リンクを自動生成したり、先頭文を機械的に強調したり、文字数だけで段落を分割したりしません。
+
+本文を持つH2・H3には見出し単位で`markers`設定が必要です。新規作成直後の空配列は設定前の状態を表し、本文完成後も`markers: []`のままでは`decorate`と`check:decoration`をPASSできません。

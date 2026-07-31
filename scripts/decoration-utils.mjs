@@ -55,15 +55,10 @@ export function assignHeadingIds(root) {
 
 const FORBIDDEN_CLASS = /^(?:swell(?:-|$)|swl(?:-|$)|cap_box(?:_|$)|is-style-|wp-block-|has-swl-|mark_yellow$)/i;
 export function removePlatformMarkup(root) {
-  // Comments are editor serialization, not article content.
   walk(root, (node) => { if (node.childNodes) node.childNodes = node.childNodes.filter((child) => child.nodeName !== '#comment'); });
-  // Remove only the legacy marker wrapper. Its child nodes are moved in place so
-  // the article text and any pre-existing inline HTML remain unchanged.
   for (const node of [...els(root, 'span'), ...els(root, 'mark')].filter((item) => /(?:swl-marker|mark_yellow|has-swl-)/i.test(attr(item, 'class')))) {
     replace(root, node, node.childNodes || []);
   }
-  // Unwrap SWELL cap boxes. Their title and body text remain, except generated navigation,
-  // which is rebuilt once in the standard format below.
   for (const box of els(root, 'div').filter((item) => /(?:swell-block-|(?:^|\s)cap_box(?:\s|$))/.test(attr(item, 'class')))) {
     const titleNode = els(box, 'div').find((item) => /(?:^|\s)cap_box_ttl(?:\s|$)/.test(attr(item, 'class')));
     const title = text(titleNode).trim();
@@ -82,9 +77,8 @@ export function removePlatformMarkup(root) {
 
 function directSectionNodes(root, heading) {
   const nodes = sectionNodes(root, heading);
-  if (heading.tagName !== 'h2') return nodes;
-  const childHeading = nodes.findIndex((node) => node.tagName === 'h3');
-  return childHeading < 0 ? nodes : nodes.slice(0, childHeading);
+  const nextHeading = nodes.findIndex((node) => /^h[1-6]$/.test(node.tagName || ''));
+  return nextHeading < 0 ? nodes : nodes.slice(0, nextHeading);
 }
 
 function markerCandidate(root, heading) {
@@ -109,6 +103,31 @@ export function applyConfiguredMarkers(root, markers = []) {
   }
 }
 
+function markerMatchesHeading(marker, heading) {
+  const section = marker.section || {};
+  if (section.id) return section.id === attr(heading, 'id');
+  return Number(section.level || 2) === Number(heading.tagName.slice(1)) && section.heading === text(heading).trim();
+}
+
+function hasMarkerEligibleText(root, paragraph) {
+  let found = false;
+  walk(paragraph, (node) => {
+    if (node.nodeName === '#text' && (node.value || '').trim() && !isIn(root, node, (parentNode) => ['a', 'code', 'strong', 'em', 'span'].includes(parentNode.tagName))) found = true;
+  });
+  return found;
+}
+
+export function validateMarkerCoverage(root, markers = []) {
+  const errors = [];
+  for (const heading of [...els(root, 'h2'), ...els(root, 'h3')]) {
+    const paragraphs = directSectionNodes(root, heading).filter((node) => node.tagName === 'p' && hasMarkerEligibleText(root, node));
+    if (!paragraphs.length) continue;
+    const configured = markers.filter((marker) => markerMatchesHeading(marker, heading));
+    if (!configured.length) errors.push(`本文がある見出しにmarker設定がありません: ${text(heading).trim()}`);
+  }
+  return errors;
+}
+
 export function applyConfiguredParagraphSplits(root, splits = []) {
   for (const split of splits) {
     const heading = findSection(root, split.section); const paragraphs = directSectionNodes(root, heading).filter((node) => node.tagName === 'p'); const paragraph = paragraphs[split.paragraph_index];
@@ -124,7 +143,6 @@ export function applyConfiguredParagraphSplits(root, splits = []) {
 
 export function insertOutline(root, title = '【この記事でわかること】') {
   const headings = els(root, 'h2'); if (!headings.length) return;
-  // Remove a previous standard outline immediately before the first H2.
   const owner = parent(root, headings[0]); const index = owner.childNodes.indexOf(headings[0]);
   const meaningful = owner.childNodes.slice(0, index).filter((node) => node.nodeName !== '#text' || text(node).trim());
   for (let i = meaningful.length - 2; i >= 0; i--) if (meaningful[i].tagName === 'p' && text(meaningful[i]).trim() === title && meaningful[i + 1]?.tagName === 'ul') { replace(root, meaningful[i + 1], []); replace(root, meaningful[i], []); break; }
