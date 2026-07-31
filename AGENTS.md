@@ -12,7 +12,24 @@
 
 ## 標準工程
 
-`rules/00-keyword-analysis.md`、`rules/01-heading-research.md`、`rules/02-heading-plan-generation.md`、`rules/03-article-generation.md`、`rules/04-external-links.md`、`rules/05-swell-decoration.md`、`rules/99-quality-check.md` の順に実行する。新規記事の通常生成入口では、完了時の `npm run check -- --slug {slug}` がPASSした後に `post_to_wp: true` の記事だけ `npm run check:decoration`、`npm run wp:doctor`、`npm run wp:draft` を自動実行する。手動の完了処理は `npm run finish -- --slug {slug}` を使い、同じ順序を重複投稿なしで実行する。`post_to_wp: true` の場合のみ `rules/06-wordpress-draft.md` を最後に実行する。
+`rules/00-keyword-analysis.md`、`rules/01-heading-research.md`、`rules/02-heading-plan-generation.md`、`rules/03-article-generation.md`、`rules/04-external-links.md`、`rules/05-swell-decoration.md`、`rules/99-quality-check.md` の順に実行する。通常生成では装飾設定を完成させ、`npm run decorate`、`npm run check:decoration`、`npm run check`の順にPASSさせる。手動の完了処理は、意味選定済みの`decoration.json`に対して`npm run finish -- --slug {slug}`を使う。`post_to_wp: true`の場合のみ`rules/06-wordpress-draft.md`を最後に実行し、WordPress処理は必ずdraftとして行う。
+
+通常の記事生成では、Codexは最初に本ファイルと`prompt.md`を読み、上記rulesを番号順に参照する。`npm run create`は記事ディレクトリと空の装飾設定を用意するだけであり、本文や意味に基づく`markers`は生成しない。本文完成後、Codex自身が次の順序を省略せず実行する。
+
+1. `article.html`を生成する。
+2. 外部リンクを追加した`article-linked.html`を生成する。
+3. H2・H3へ一意のIDを設定し、両HTMLで一致させる。
+4. 各H2・H3から次の見出しまでの直接本文を読む。
+5. 各対象見出しから最重要箇所を意味に基づいて選ぶ。
+6. 選択結果を`decoration.json`の`markers`へ記入する。
+7. 必要な意味境界だけを`paragraph_splits`へ記入する。
+8. 必要なH2だけを`h3_anchor_lists`へ記入する。
+9. `npm run decorate -- --slug {slug}`を実行する。
+10. `npm run check:decoration -- --slug {slug}`を実行する。
+11. カバレッジ不足なら、エラーに示された見出し本文を読み直して`markers`を補完し、9から再実行する。
+12. 装飾検証と`npm run check -- --slug {slug}`がすべてPASSした後だけ完了報告へ進む。
+
+先頭文の機械選択や単純なキーワード判定で`markers`を作らない。意味選定前の`markers: []`は未完成状態であり、`npm run finish`も設定を自動補完しない。
 
 ## 記事制作方針
 
@@ -41,5 +58,6 @@
 - 新規記事では `decoration.json` を作成し、原則 `enabled: true` とする。
 - 装飾生成は `npm run decorate -- --slug <slug>`、装飾検証は `npm run check:decoration -- --slug <slug>` を使う。
 - 装飾は `article-linked.html`（なければ `article.html`）から `article-decorated.html` を冪等生成し、装飾済みHTMLを入力として再装飾しない。
+- Codex自身が各H2・H3の直接本文を読み、意味に基づいて`decoration.json`の`markers`を完成させてから装飾コマンドを実行する。
 - 装飾結果にSWELL・Gutenberg固有のコメント、クラス、ショートコードを出力しない。最初のH2直前には標準のp/ul/li/aによる「【この記事でわかること】」を1回だけ置く。
 - この装飾手順はWordPress下書き投稿処理を変更しない。
